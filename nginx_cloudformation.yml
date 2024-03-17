@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: EC2 Instance with NGINX and SSL using CloudFormation
+
+Resources:
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0c55b159cbfafe1f0  # Amazon Linux 2 AMI (replace with your desired AMI)
+      KeyName: MyKeyPair  # Replace with your SSH key pair
+      SecurityGroups:
+        - Ref: InstanceSecurityGroup
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          yum update -y
+          yum install nginx -y
+          systemctl start nginx
+          systemctl enable nginx
+          yum install certbot python3-certbot-nginx -y
+          certbot --nginx --non-interactive --agree-tos -m admin@example.com -d yourdomain.com  # Replace with your email and domain
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH, HTTP, and HTTPS access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0  # Open SSH access to all IP addresses
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0  # Open HTTP access to all IP addresses
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0  # Open HTTPS access to all IP addresses
